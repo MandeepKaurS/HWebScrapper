@@ -1,0 +1,50 @@
+import smtplib
+import re
+import datetime as dt
+
+from bs4 import BeautifulSoup
+import requests
+
+#Part 1 - Scraping Data from the website
+#Function that takes a website URL and required element as an argument
+def scrapData(url, req_element):
+    html_doc = requests.get(url).content
+
+    soup = BeautifulSoup(html_doc, 'html.parser')
+
+    req_t = soup.find(name='div', class_=req_element )
+    g_value= req_t.getText()
+    return g_value
+
+#PART 2 - Sending email alert
+def sendAlert(sender_email, sender_email_password,receiver_email,message):
+    try:
+        connection = smtplib.SMTP("smtp.gmail.com", 587)
+        connection.ehlo()
+        connection.starttls()
+        connection.login(user=sender_email, password=sender_email_password)
+        connection.sendmail(from_addr=sender_email, to_addrs=receiver_email, msg=message)
+    except:
+        print("Something went wrong")
+    finally:
+        connection.close()
+
+#PART 3 : Set New Threshold Value for EMail Alert
+def setThresholdValue(tvalue=170):
+    tvalue =  int(input("Enter new threshold value: "))
+    return tvalue
+
+
+#Main CODE
+url = "https://global.awxbio.cool/remote/glycemic/52202.htm?openid=3703940156398111&fbclid=IwAR0U3mNjJ3Ta50Q-D9TBVf2UbKZ9HZm66wzaClvzcVpda7PmsTyMZySbCe8";
+required_value="glycemic-value"
+sugar_value=scrapData(url, required_value)
+sv=re.search(r'\d+', sugar_value).group()
+threshold_sugar_value=170
+if(int(sv)>threshold_sugar_value):
+    my_email = "mandeeepshergill94@gmail.com"
+    #In order to get this password, turn on 2 step verification for your account and go to security and set the App password for your customised app.
+    # Do check your spam folder if the code runs successfully.
+    password = "ftcyowflodtsewai"
+    sendAlert(sender_email=my_email,sender_email_password=password,receiver_email="Maanoshergill@gmail.com",message="Subject :Email Alert - Sugar Level Increased!\n\nYour Glycemic value is "+sv+" at "+ str(dt.datetime.now()))
+
